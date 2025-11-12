@@ -2163,6 +2163,12 @@ Transform:
   m_Children: []
   m_Father: {fileID: 782491124}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &491797532 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8368010233083971391, guid: 59adeceaaba3b8545bbb3a04ccc49a37,
+    type: 3}
+  m_PrefabInstance: {fileID: 679607058804117484}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &494025951
 GameObject:
   m_ObjectHideFlags: 0
@@ -2810,18 +2816,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 524461489}
   m_CullTransparentMesh: 1
---- !u!114 &580127249 stripped
+--- !u!114 &580127251
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3640413015082566921, guid: 59adeceaaba3b8545bbb3a04ccc49a37,
-    type: 3}
-  m_PrefabInstance: {fileID: 679607058804117484}
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 491797532}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d69d5d53e45bb2748a0e07af384004c1, type: 3}
+  m_Script: {fileID: 11500000, guid: 8d70b7b77e40ac44dae19f9437c66776, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  positions:
+  - {x: -2.05, y: 4.79, z: -3.42}
+  - {x: -2.05, y: -7.25, z: -3.42}
+  smoothSpeed: 1.2
+  status: 0
 --- !u!1 &589950281
 GameObject:
   m_ObjectHideFlags: 0
@@ -3364,7 +3375,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 580127249}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: CameraMovement, Assembly-CSharp
         m_MethodName: ManfiStatus
         m_Mode: 1
@@ -4960,8 +4971,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 580127249}
-        m_TargetAssemblyTypeName: CameraMovement, Assembly-CSharp
+      - m_Target: {fileID: 580127251}
+        m_TargetAssemblyTypeName: CameraAnim, Assembly-CSharp
         m_MethodName: PlusStatus
         m_Mode: 1
         m_Arguments:
@@ -6892,6 +6903,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 3640413015082566921, guid: 59adeceaaba3b8545bbb3a04ccc49a37,
         type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3640413015082566921, guid: 59adeceaaba3b8545bbb3a04ccc49a37,
+        type: 3}
       propertyPath: smoothTime
       value: 1.2
       objectReference: {fileID: 0}
@@ -6970,10 +6986,15 @@ PrefabInstance:
       propertyPath: m_Name
       value: CameraPivot
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 3640413015082566921, guid: 59adeceaaba3b8545bbb3a04ccc49a37, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8368010233083971391, guid: 59adeceaaba3b8545bbb3a04ccc49a37,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 580127251}
   m_SourcePrefab: {fileID: 100100000, guid: 59adeceaaba3b8545bbb3a04ccc49a37, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

@@ -8,7 +8,7 @@ public class LevelManager : MonoBehaviour
     [SerializeField] private SimpleGridMovement player;
     [SerializeField] private List<Level> levelsData;
     [SerializeField] private Transform parrent;
-    [SerializeField] private Transform camera;
+    //[SerializeField] private Transform camera;
     [Header("Prefabs")]
     [SerializeField] private GameObject CubePrefab;
     [SerializeField] private GameObject CubeStart;
@@ -26,7 +26,7 @@ public class LevelManager : MonoBehaviour
         if (currentLevel == null) return;
 
         // Camera
-        camera.position = currentLevel.CameraPosition;
+        //camera.position = currentLevel.CameraPosition;
 
         // Instantiate
         BlockToFall.Add(Instantiate(CubeStart, new Vector3(currentLevel.StartPos.x, 0, currentLevel.StartPos.y), Quaternion.identity, parrent));

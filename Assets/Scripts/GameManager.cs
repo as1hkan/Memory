@@ -32,9 +32,12 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        levelManager.Load(2);
+        int levelToLoad = PlayerPrefs.GetInt("SelectedLevel", 1);
+        levelManager.Load(levelToLoad);
+
         StartCoroutine(StartTimer());
     }
+
 
     void Update()
     {
@@ -144,8 +147,8 @@ public class GameManager : MonoBehaviour
             for (int i = 0; i < blocksToFall.Length; i++)
                 startPositions[i] = blocksToFall[i].transform.position;
 
-            Vector3 moveOffset = Vector3.down * 20f;
-            float fallDuration = 2f;
+            Vector3 moveOffset = Vector3.down * 40f;
+            float fallDuration = 3f;
             float elapsed = 0f;
 
             while (elapsed < fallDuration)
