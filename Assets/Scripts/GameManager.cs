@@ -10,6 +10,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Player Settings")]
     public SimpleGridMovement player;
+    public LevelManager levelManager;
     public float rayDistance = 2f;
     public LayerMask blockMask;
     public LayerMask endMask;
@@ -17,14 +18,8 @@ public class GameManager : MonoBehaviour
     [Header("Blocks & UI")]
     public GameObject[] blocks;
     public GameObject[] blocksToFall;
-
-    [Tooltip("برای شمارش معکوس اعداد (۵ تا ۱) استفاده می‌شود")]
     public TextMeshProUGUI countdownText;
-
-    [Tooltip("عکس PNG برای نمایش 'برو!'")]
     public Image goImage;
-
-    [Tooltip("عکس PNG برای نمایش 'بردی!'")]
     public Image winImage;
 
     [HideInInspector] public bool gameEnded = false;
@@ -37,6 +32,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        levelManager.Load(2);
         StartCoroutine(StartTimer());
     }
 

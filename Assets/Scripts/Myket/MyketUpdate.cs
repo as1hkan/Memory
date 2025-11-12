@@ -2,15 +2,9 @@
 
 public class MyketUpdater : MonoBehaviour
 {
+#if UNITY_ANDROID
     void Start()
     {
-        // 👇 خودکار در شروع بازی اجرا می‌شود
-        CheckForUpdate();
-    }
-
-    private void CheckForUpdate()
-    {
-#if UNITY_ANDROID
         try
         {
             string packageName = "com.ashkan.memorylane"; // شناسه پکیج بازی‌ات
@@ -28,8 +22,8 @@ public class MyketUpdater : MonoBehaviour
         }
         catch (System.Exception e)
         {
-            Debug.LogError("❌ خطا در بررسی آپدیت مایکت: " + e.Message);
+            Debug.LogError("Error: " + e.Message);
         }
-#endif
     }
+#endif
 }

@@ -3,17 +3,13 @@
 public class MyketRatePrompt : MonoBehaviour
 {
     private const string PlayCountKey = "menu_open_count";
-    private const int ShowEvery = 5; // 👈 هر چند بار یک‌بار نمایش داده شود
+    private const int ShowEvery = 5;
     private const string PackageName = "com.ashkan.memorylane";
+
+#if UNITY_ANDROID
 
     void Start()
     {
-        HandleRatePrompt();
-    }
-
-    private void HandleRatePrompt()
-    {
-#if UNITY_ANDROID
         int count = PlayerPrefs.GetInt(PlayCountKey, 0);
         count++;
         PlayerPrefs.SetInt(PlayCountKey, count);
@@ -26,7 +22,6 @@ public class MyketRatePrompt : MonoBehaviour
         {
             OpenMyketComment();
         }
-#endif
     }
 
     private void OpenMyketComment()
@@ -52,4 +47,5 @@ public class MyketRatePrompt : MonoBehaviour
             Debug.LogError("❌ خطا در باز کردن مایکت برای امتیاز: " + e.Message);
         }
     }
+#endif
 }
