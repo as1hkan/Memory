@@ -4,6 +4,7 @@ using System.Collections;
 
 public class SimpleGridMovement : MonoBehaviour
 {
+    
     [Header("Movement Settings")]
     public float moveSpeed = 5f;
     public float moveDistance = 1f;
@@ -26,6 +27,7 @@ public class SimpleGridMovement : MonoBehaviour
     [SerializeField] private AudioClip moveClip;
     [SerializeField] private AudioClip loseClip;   // 🔹 صدای باخت
 
+    public bool isWinning = false;
     void Start()
     {
         StartCoroutine(StartTimer());

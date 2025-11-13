@@ -1,0 +1,5 @@
+D:/UnityProject/MemoryLane - test/.utmp/RelWithDebInfo/95r4j4r4/x86/CMakeFiles/edit_cache.dir
+D:/UnityProject/MemoryLane - test/.utmp/RelWithDebInfo/95r4j4r4/x86/CMakeFiles/rebuild_cache.dir
+D:/UnityProject/MemoryLane - test/.utmp/RelWithDebInfo/95r4j4r4/x86/FramePacing/CMakeFiles/swappywrapper.dir
+D:/UnityProject/MemoryLane - test/.utmp/RelWithDebInfo/95r4j4r4/x86/FramePacing/CMakeFiles/edit_cache.dir
+D:/UnityProject/MemoryLane - test/.utmp/RelWithDebInfo/95r4j4r4/x86/FramePacing/CMakeFiles/rebuild_cache.dir

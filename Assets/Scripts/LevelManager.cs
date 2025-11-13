@@ -1,14 +1,12 @@
 ﻿using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
 
 public class LevelManager : MonoBehaviour
 {
     [SerializeField] private SimpleGridMovement player;
     [SerializeField] private List<Level> levelsData;
-    [SerializeField] private Transform parrent;
-    //[SerializeField] private Transform camera;
+    [SerializeField] private Transform parent;
+
     [Header("Prefabs")]
     [SerializeField] private GameObject CubePrefab;
     [SerializeField] private GameObject CubeStart;
@@ -17,52 +15,73 @@ public class LevelManager : MonoBehaviour
     private List<GameObject> localPrivate = new List<GameObject>();
     private List<GameObject> BlockToFall = new List<GameObject>();
 
+    private GameObject currentLevelGO;
 
     public void Load(int index)
     {
-        // Level
-        Level currentLevel = levelsData[index - 1];
+        if (currentLevelGO != null)
+            Destroy(currentLevelGO);
 
-        if (currentLevel == null) return;
+        currentLevelGO = new GameObject("LEVEL_" + index);
+        currentLevelGO.transform.SetParent(parent);
 
-        // Camera
-        //camera.position = currentLevel.CameraPosition;
+        localPrivate.Clear();
+        BlockToFall.Clear();
 
-        // Instantiate
-        BlockToFall.Add(Instantiate(CubeStart, new Vector3(currentLevel.StartPos.x, 0, currentLevel.StartPos.y), Quaternion.identity, parrent));
+        Level lvl = levelsData[index - 1];
+        if (lvl == null) return;
 
-        for (int i = 0; i < currentLevel.Cubes.Count; i++)
+        // Start block
+        GameObject startObj = Instantiate(
+            CubeStart,
+            new Vector3(lvl.StartPos.x, 0, lvl.StartPos.y),
+            Quaternion.identity,
+            currentLevelGO.transform
+        );
+
+        BlockToFall.Add(startObj);
+
+        // Path blocks
+        foreach (var pos in lvl.Cubes)
         {
-            localPrivate.Add(Instantiate(CubePrefab, new Vector3(currentLevel.Cubes[i].x, 0, currentLevel.Cubes[i].y), Quaternion.identity, parrent));
+            GameObject cube = Instantiate(
+                CubePrefab,
+                new Vector3(pos.x, 0, pos.y),
+                Quaternion.identity,
+                currentLevelGO.transform
+            );
+
+            localPrivate.Add(cube);
         }
 
-        BlockToFall.Add(Instantiate(CubeEnd, new Vector3(currentLevel.EndPos.x, 0, currentLevel.EndPos.y), Quaternion.identity, parrent));
+        // End block
+        GameObject endObj = Instantiate(
+            CubeEnd,
+            new Vector3(lvl.EndPos.x, 0, lvl.EndPos.y),
+            Quaternion.identity,
+            currentLevelGO.transform
+        );
 
-        // Color
+        BlockToFall.Add(endObj);
+
+        // Color gradient
         for (int i = 0; i < localPrivate.Count; i++)
         {
-            float t = (localPrivate.Count == 1) ? 0f : (float)i / (localPrivate.Count - 1);
-            Color currentColor = Color.Lerp(currentLevel.StartColor, currentLevel.EndColor, t);
+            float t = (float)i / Mathf.Max(1, localPrivate.Count - 1);
+            Color c = Color.Lerp(lvl.StartColor, lvl.EndColor, t);
 
-            Renderer rend = localPrivate[i].GetComponent<Renderer>();
-            if (rend != null)
-            {
-                rend.material.color = currentColor;
-            }
+            MeshRenderer r = localPrivate[i].GetComponent<MeshRenderer>();
+            if (r != null) r.material.color = c;
+
+            BlockToFall.Add(localPrivate[i]);
         }
 
-        foreach (var block in localPrivate)
-        {
-            BlockToFall.Add(block);
-        }
-        BlockToFall.Add(player.transform.gameObject);
+        BlockToFall.Add(player.gameObject);
 
-        GameManager.instance.blocksToFall = BlockToFall.ToArray();
+        // Export to GameManager
         GameManager.instance.blocks = localPrivate.ToArray();
-    }
-
-    public void Clear()
-    {
-
+        GameManager.instance.blocksToFall = BlockToFall.ToArray();
+        GameManager.instance.StartPoint = startObj.transform;
+        GameManager.instance.EndPoint = endObj.transform;
     }
 }

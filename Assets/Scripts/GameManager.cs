@@ -2,27 +2,33 @@
 using System.Collections;
 using TMPro;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
+using System.Linq;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
 
-    [Header("Player Settings")]
+    [Header("Player/Level")]
     public SimpleGridMovement player;
     public LevelManager levelManager;
+
+    [Header("Ray Settings")]
     public float rayDistance = 2f;
     public LayerMask blockMask;
     public LayerMask endMask;
 
-    [Header("Blocks & UI")]
+    [Header("Blocks")]
     public GameObject[] blocks;
     public GameObject[] blocksToFall;
+    public Transform StartPoint;
+    public Transform EndPoint;
+
+    [Header("UI")]
     public TextMeshProUGUI countdownText;
     public Image goImage;
     public Image winImage;
 
-    [HideInInspector] public bool gameEnded = false;
+    private bool gameEnded = false;
     private bool winRoutineStarted = false;
 
     void Awake()
@@ -32,174 +38,188 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        int levelToLoad = PlayerPrefs.GetInt("SelectedLevel", 1);
-        levelManager.Load(levelToLoad);
+        int lvl = PlayerPrefs.GetInt("SelectedLevel", 1);
+        levelManager.Load(lvl);
 
         StartCoroutine(StartTimer());
     }
 
-
     void Update()
     {
-        if (player != null && player.canMove && !gameEnded)
+        if (!gameEnded && player.canMove)
         {
             RevealBlockUnderPlayer(player.transform.position);
             CheckWin(player.transform.position);
         }
     }
 
-    // 🕒 شمارش معکوس و شروع بازی
     IEnumerator StartTimer()
     {
-        float countdown = 5f;
+        float countdown = 3f;
 
-        // شمارش معکوس
         while (countdown > 0)
         {
             countdownText.text = Mathf.CeilToInt(countdown).ToString();
             yield return new WaitForSeconds(1f);
-            countdown -= 1f;
+            countdown--;
         }
 
-        // 🟢 در همین لحظه:
-        // 1. متن پاک می‌شود
-        // 2. تصویر "برو!" نمایش داده می‌شود
-        // 3. بلاک‌ها غیب می‌شوند
-        // 4. حرکت بازیکن فعال می‌شود
         countdownText.text = "";
+        goImage.gameObject.SetActive(true);
 
-        if (goImage != null)
-            goImage.gameObject.SetActive(true);
+        yield return new WaitForSeconds(0.7f);
+        goImage.gameObject.SetActive(false);
 
-        if (blocks != null && blocks.Length > 0)
+        // Hide path blocks until stepped on
+        foreach (var block in blocks)
         {
-            foreach (GameObject block in blocks)
-            {
-                MeshRenderer renderer = block.GetComponent<MeshRenderer>();
-                if (renderer != null)
-                    renderer.enabled = false;
-            }
+            var r = block.GetComponent<MeshRenderer>();
+            if (r != null) r.enabled = false;
         }
 
-        if (player != null)
-            player.canMove = true;
-
-        // نمایش “برو!” برای ۱ ثانیه
-        yield return new WaitForSeconds(1f);
-
-        if (goImage != null)
-            goImage.gameObject.SetActive(false);
+        player.canMove = true;
     }
 
-    // 🧱 نمایش بلاک زیر بازیکن
-    void RevealBlockUnderPlayer(Vector3 playerPos)
+    void RevealBlockUnderPlayer(Vector3 pos)
     {
-        Vector3 origin = playerPos + Vector3.up * 1f;
+        Vector3 origin = pos + Vector3.up * 0.5f;
+
         if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, rayDistance, blockMask))
         {
-            MeshRenderer rend = hit.collider.GetComponent<MeshRenderer>();
-            if (rend != null && !rend.enabled)
-                rend.enabled = true;
+            MeshRenderer r = hit.collider.GetComponent<MeshRenderer>();
+            if (r != null && !r.enabled)
+                r.enabled = true;
         }
     }
 
-    // 🏁 بررسی پایان
-    void CheckWin(Vector3 playerPos)
+    void CheckWin(Vector3 pos)
     {
-        Vector3 origin = playerPos + Vector3.up * 0.5f;
+        Vector3 origin = pos + Vector3.up * 0.2f;
+
         if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, rayDistance, endMask))
         {
             if (!winRoutineStarted)
             {
                 winRoutineStarted = true;
-                StartCoroutine(WaitForPlayerToFinishThenWin());
+                StartCoroutine(WaitForStopThenWin());
             }
         }
     }
 
-    // 🕹️ انتظار تا پایان حرکت و افتادن بازیکن
-    IEnumerator WaitForPlayerToFinishThenWin()
+    IEnumerator WaitForStopThenWin()
     {
-        if (player != null)
-        {
-            while (player.IsMoving() || player.IsFalling())
-                yield return null;
-        }
+        while (player.IsMoving() || player.IsFalling())
+            yield return null;
 
-        // قفل کردن حرکت بعد از برد
-        if (player != null)
-            player.canMove = false;
-
+        player.canMove = false;
+        player.isWinning = true;
         gameEnded = true;
+
         StartCoroutine(HandleWin());
     }
 
-    // 🎉 بردن مرحله
     IEnumerator HandleWin()
     {
-        if (winImage != null)
-            winImage.gameObject.SetActive(true);
+        winImage.gameObject.SetActive(true);
 
-        // انیمیشن افتادن بلاک‌ها
-        if (blocksToFall != null && blocksToFall.Length > 0)
+        yield return new WaitForSeconds(0.5f);
+
+        // Sort by StartPoint
+        blocksToFall = blocksToFall
+            .OrderBy(b => Vector3.Distance(b.transform.position, StartPoint.position))
+            .ToArray();
+
+        float fallTime = 2f;
+        float fallDistance = 40f;
+        float delay = 0.18f;
+
+        bool playerFallStarted = false;
+
+        for (int i = 0; i < blocksToFall.Length; i++)
         {
-            Vector3[] startPositions = new Vector3[blocksToFall.Length];
-            for (int i = 0; i < blocksToFall.Length; i++)
-                startPositions[i] = blocksToFall[i].transform.position;
+            Transform block = blocksToFall[i].transform;
 
-            Vector3 moveOffset = Vector3.down * 40f;
-            float fallDuration = 3f;
-            float elapsed = 0f;
+            Vector3 start = block.position;
+            Vector3 end = start + Vector3.down * fallDistance;
 
-            while (elapsed < fallDuration)
+            StartCoroutine(FallBlock(block, start, end, fallTime));
+
+            if (!playerFallStarted && block == EndPoint)
             {
-                elapsed += Time.deltaTime;
-                float t = elapsed / fallDuration;
-                for (int i = 0; i < blocksToFall.Length; i++)
-                    blocksToFall[i].transform.position =
-                        Vector3.Lerp(startPositions[i], startPositions[i] + moveOffset, t);
-                yield return null;
+                playerFallStarted = true;
+                StartCoroutine(FallPlayer(player.transform, block, fallTime, fallDistance));
             }
+
+            yield return new WaitForSeconds(delay);
         }
 
-        yield return new WaitForSeconds(0.8f);
+        yield return new WaitForSeconds(1.8f);
 
-        if (winImage != null)
-            winImage.gameObject.SetActive(false);
+        int current = PlayerPrefs.GetInt("SelectedLevel", 1);
+        int next = current + 1;
 
-        // 🔹 تعیین مرحله فعلی
-        string currentScene = SceneManager.GetActiveScene().name;
-        int currentLevelNumber = 0;
+        PlayerPrefs.SetInt("SelectedLevel", next);
+        PlayerPrefs.Save();
 
-        if (currentScene.StartsWith("LVL"))
+        yield return StartCoroutine(FadeAndLoad(next));
+    }
+
+    IEnumerator FallBlock(Transform t, Vector3 start, Vector3 end, float dur)
+    {
+        float time = 0;
+
+        while (time < dur)
         {
-            string numberPart = currentScene.Replace("LVL", "").Trim();
-            int.TryParse(numberPart, out currentLevelNumber);
+            time += Time.deltaTime;
+            float p = Mathf.SmoothStep(0, 1, time / dur);
+            t.position = Vector3.Lerp(start, end, p);
+            yield return null;
+        }
+    }
+
+    IEnumerator FallPlayer(Transform player, Transform endPoint, float dur, float dist)
+    {
+        float time = 0;
+
+        Vector3 start = player.position;
+        Vector3 end = start + Vector3.down * dist;
+
+        while (time < dur)
+        {
+            time += Time.deltaTime;
+            float p = Mathf.SmoothStep(0, 1, time / dur);
+
+            Vector3 ep = endPoint.position;
+            player.position = new Vector3(ep.x, Mathf.Lerp(start.y, end.y, p), ep.z);
+
+            yield return null;
+        }
+    }
+
+    IEnumerator FadeAndLoad(int nextLevel)
+    {
+        GameObject fadeObj = new GameObject("FadePanel");
+        Canvas canvas = fadeObj.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 999;
+
+        CanvasGroup cg = fadeObj.AddComponent<CanvasGroup>();
+        fadeObj.AddComponent<GraphicRaycaster>();
+
+        Image img = fadeObj.AddComponent<Image>();
+        img.color = Color.black;
+        cg.alpha = 0f;
+
+        float t = 0;
+        float dur = 0.8f;
+
+        while (t < dur)
+        {
+            t += Time.deltaTime;
+            cg.alpha = Mathf.Lerp(0, 1, t / dur);
+            yield return null;
         }
 
-        // 🔓 باز کردن مرحله بعد
-        int savedLevel = PlayerPrefs.GetInt("UnlockedLevel", -1);
-        if (currentLevelNumber - 1 > savedLevel)
-        {
-            PlayerPrefs.SetInt("UnlockedLevel", currentLevelNumber - 1);
-            PlayerPrefs.Save();
-        }
-
-        // 🔁 رفتن به مرحله بعد
-        if (currentLevelNumber >= 40)
-        {
-            yield return new WaitForSeconds(1f);
-            SceneManager.LoadScene("End Scene");
-        }
-        else
-        {
-            int nextLevelNumber = currentLevelNumber + 1;
-            string nextScene = "LVL " + nextLevelNumber;
-
-            if (Application.CanStreamedLevelBeLoaded(nextScene))
-                SceneManager.LoadScene(nextScene);
-            else
-                SceneManager.LoadScene("MenuScene");
-        }
+        levelManager.Load(nextLevel);
     }
 }
