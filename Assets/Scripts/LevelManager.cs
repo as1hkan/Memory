@@ -12,36 +12,37 @@ public class LevelManager : MonoBehaviour
     [SerializeField] private GameObject CubeStart;
     [SerializeField] private GameObject CubeEnd;
 
-    private List<GameObject> localPrivate = new List<GameObject>();
-    private List<GameObject> BlockToFall = new List<GameObject>();
-
     private GameObject currentLevelGO;
 
     public void Load(int index)
     {
+        Debug.Log("LevelManager Loading = " + index);
+
         if (currentLevelGO != null)
             Destroy(currentLevelGO);
 
         currentLevelGO = new GameObject("LEVEL_" + index);
         currentLevelGO.transform.SetParent(parent);
+        currentLevelGO.transform.localPosition = new Vector3(0, -5f, 0);
 
-        localPrivate.Clear();
-        BlockToFall.Clear();
 
         Level lvl = levelsData[index - 1];
-        if (lvl == null) return;
 
-        // Start block
+        List<GameObject> blocks = new List<GameObject>();
+        List<GameObject> blocksToFall = new List<GameObject>();
+
+        // START BLOCK
         GameObject startObj = Instantiate(
             CubeStart,
             new Vector3(lvl.StartPos.x, 0, lvl.StartPos.y),
             Quaternion.identity,
             currentLevelGO.transform
+
         );
 
-        BlockToFall.Add(startObj);
+        blocksToFall.Add(startObj);
 
-        // Path blocks
+        // PATH
         foreach (var pos in lvl.Cubes)
         {
             GameObject cube = Instantiate(
@@ -51,10 +52,10 @@ public class LevelManager : MonoBehaviour
                 currentLevelGO.transform
             );
 
-            localPrivate.Add(cube);
+            blocks.Add(cube);
         }
 
-        // End block
+        // END BLOCK
         GameObject endObj = Instantiate(
             CubeEnd,
             new Vector3(lvl.EndPos.x, 0, lvl.EndPos.y),
@@ -62,26 +63,29 @@ public class LevelManager : MonoBehaviour
             currentLevelGO.transform
         );
 
-        BlockToFall.Add(endObj);
+        blocksToFall.Add(endObj);
 
-        // Color gradient
-        for (int i = 0; i < localPrivate.Count; i++)
+        // COLOR GRADIENT
+        for (int i = 0; i < blocks.Count; i++)
         {
-            float t = (float)i / Mathf.Max(1, localPrivate.Count - 1);
-            Color c = Color.Lerp(lvl.StartColor, lvl.EndColor, t);
+            float t = (float)i / (blocks.Count - 1);
+            Color color = Color.Lerp(lvl.StartColor, lvl.EndColor, t);
 
-            MeshRenderer r = localPrivate[i].GetComponent<MeshRenderer>();
-            if (r != null) r.material.color = c;
-
-            BlockToFall.Add(localPrivate[i]);
+            blocks[i].GetComponent<MeshRenderer>().material.color = color;
+            blocksToFall.Add(blocks[i]);
         }
 
-        BlockToFall.Add(player.gameObject);
+        // PLAYER PLACE
+        player.transform.position = new Vector3(lvl.StartPos.x, 1, lvl.StartPos.y);
+        player.canMove = false;
+        player.isWinning = false;
 
-        // Export to GameManager
-        GameManager.instance.blocks = localPrivate.ToArray();
-        GameManager.instance.blocksToFall = BlockToFall.ToArray();
+        // SEND TO GAMEMANAGER
+        GameManager.instance.blocks = blocks.ToArray();
+        GameManager.instance.blocksToFall = blocksToFall.ToArray();
         GameManager.instance.StartPoint = startObj.transform;
         GameManager.instance.EndPoint = endObj.transform;
+
+        Debug.Log("Loaded Level " + index);
     }
 }

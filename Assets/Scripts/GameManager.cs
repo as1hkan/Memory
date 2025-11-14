@@ -1,8 +1,7 @@
-﻿using UnityEngine;
-using System.Collections;
-using TMPro;
-using UnityEngine.UI;
+﻿using System.Collections;
 using System.Linq;
+using TMPro;
+using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
@@ -25,14 +24,18 @@ public class GameManager : MonoBehaviour
 
     [Header("UI")]
     public TextMeshProUGUI countdownText;
-    public Image goImage;
-    public Image winImage;
 
     private bool gameEnded = false;
     private bool winRoutineStarted = false;
 
     void Awake()
     {
+        if (instance != null && instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
         instance = this;
     }
 
@@ -40,7 +43,6 @@ public class GameManager : MonoBehaviour
     {
         int lvl = PlayerPrefs.GetInt("SelectedLevel", 1);
         levelManager.Load(lvl);
-
         StartCoroutine(StartTimer());
     }
 
@@ -55,48 +57,53 @@ public class GameManager : MonoBehaviour
 
     IEnumerator StartTimer()
     {
+        countdownText.text = "";
         float countdown = 3f;
 
+        // 3 → 2 → 1
         while (countdown > 0)
         {
             countdownText.text = Mathf.CeilToInt(countdown).ToString();
+            StartCoroutine(FadeScale(countdownText));
             yield return new WaitForSeconds(1f);
             countdown--;
         }
 
-        countdownText.text = "";
-        goImage.gameObject.SetActive(true);
-
-        yield return new WaitForSeconds(0.7f);
-        goImage.gameObject.SetActive(false);
-
-        // Hide path blocks until stepped on
-        foreach (var block in blocks)
+        // مخفی کردن مسیر
+        foreach (var b in blocks)
         {
-            var r = block.GetComponent<MeshRenderer>();
+            var r = b.GetComponent<MeshRenderer>();
             if (r != null) r.enabled = false;
         }
 
+        // 🟩 GO!
+        countdownText.text = "برو!";
+        StartCoroutine(FadeScale(countdownText));      // ظاهر شدن
+
+        yield return new WaitForSeconds(0.6f);
+
+        StartCoroutine(TextFadeOut(countdownText));    // محو شدن
+
+        yield return new WaitForSeconds(0.3f);
+
+        countdownText.text = "";
         player.canMove = true;
     }
 
     void RevealBlockUnderPlayer(Vector3 pos)
     {
-        Vector3 origin = pos + Vector3.up * 0.5f;
-
-        if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, rayDistance, blockMask))
+        if (Physics.Raycast(pos + Vector3.up * 0.5f, Vector3.down,
+            out RaycastHit hit, rayDistance, blockMask))
         {
-            MeshRenderer r = hit.collider.GetComponent<MeshRenderer>();
-            if (r != null && !r.enabled)
-                r.enabled = true;
+            var r = hit.collider.GetComponent<MeshRenderer>();
+            if (!r.enabled) r.enabled = true;
         }
     }
 
     void CheckWin(Vector3 pos)
     {
-        Vector3 origin = pos + Vector3.up * 0.2f;
-
-        if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, rayDistance, endMask))
+        if (Physics.Raycast(pos + Vector3.up * 0.2f, Vector3.down,
+            out RaycastHit hit, rayDistance, endMask))
         {
             if (!winRoutineStarted)
             {
@@ -120,106 +127,136 @@ public class GameManager : MonoBehaviour
 
     IEnumerator HandleWin()
     {
-        winImage.gameObject.SetActive(true);
+        countdownText.text = "برنده شدی!";
+        StartCoroutine(FadeScale(countdownText));
 
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.6f);
+        StartCoroutine(TextFadeOut(countdownText));
 
-        // Sort by StartPoint
+        // Block fall (بدون تغییر)
         blocksToFall = blocksToFall
             .OrderBy(b => Vector3.Distance(b.transform.position, StartPoint.position))
             .ToArray();
 
-        float fallTime = 2f;
-        float fallDistance = 40f;
+        float dur = 2f;
+        float dist = 40f;
         float delay = 0.18f;
 
-        bool playerFallStarted = false;
+        bool playerFall = false;
 
         for (int i = 0; i < blocksToFall.Length; i++)
         {
             Transform block = blocksToFall[i].transform;
 
-            Vector3 start = block.position;
-            Vector3 end = start + Vector3.down * fallDistance;
+            Vector3 s = block.position;
+            Vector3 e = s + Vector3.down * dist;
 
-            StartCoroutine(FallBlock(block, start, end, fallTime));
+            StartCoroutine(FallBlock(block, s, e, dur));
 
-            if (!playerFallStarted && block == EndPoint)
+            if (!playerFall && block == EndPoint)
             {
-                playerFallStarted = true;
-                StartCoroutine(FallPlayer(player.transform, block, fallTime, fallDistance));
+                playerFall = true;
+                StartCoroutine(FallPlayer(player.transform, block, dur, dist));
             }
 
             yield return new WaitForSeconds(delay);
         }
 
-        yield return new WaitForSeconds(1.8f);
+        yield return new WaitForSeconds(1.4f);
 
+        // Save next level
         int current = PlayerPrefs.GetInt("SelectedLevel", 1);
         int next = current + 1;
-
         PlayerPrefs.SetInt("SelectedLevel", next);
         PlayerPrefs.Save();
 
-        yield return StartCoroutine(FadeAndLoad(next));
+        countdownText.text = "";
+
+        // Load next level (بدون Fade)
+        levelManager.Load(next);
+
+        // Reset flags
+        gameEnded = false;
+        winRoutineStarted = false;
+
+        StartCoroutine(StartTimer());
     }
 
-    IEnumerator FallBlock(Transform t, Vector3 start, Vector3 end, float dur)
+    IEnumerator FallBlock(Transform t, Vector3 s, Vector3 e, float dur)
     {
-        float time = 0;
-
-        while (time < dur)
+        float tm = 0;
+        while (tm < dur)
         {
-            time += Time.deltaTime;
-            float p = Mathf.SmoothStep(0, 1, time / dur);
-            t.position = Vector3.Lerp(start, end, p);
+            tm += Time.deltaTime;
+            t.position = Vector3.Lerp(s, e, Mathf.SmoothStep(0, 1, tm / dur));
             yield return null;
         }
     }
 
-    IEnumerator FallPlayer(Transform player, Transform endPoint, float dur, float dist)
+    IEnumerator FallPlayer(Transform p, Transform ep, float dur, float dist)
     {
-        float time = 0;
+        float tm = 0;
+        Vector3 s = p.position;
+        Vector3 e = s + Vector3.down * dist;
 
-        Vector3 start = player.position;
-        Vector3 end = start + Vector3.down * dist;
-
-        while (time < dur)
+        while (tm < dur)
         {
-            time += Time.deltaTime;
-            float p = Mathf.SmoothStep(0, 1, time / dur);
-
-            Vector3 ep = endPoint.position;
-            player.position = new Vector3(ep.x, Mathf.Lerp(start.y, end.y, p), ep.z);
-
+            tm += Time.deltaTime;
+            float pr = Mathf.SmoothStep(0, 1, tm / dur);
+            p.position = new Vector3(
+                ep.position.x,
+                Mathf.Lerp(s.y, e.y, pr),
+                ep.position.z
+            );
             yield return null;
         }
     }
 
-    IEnumerator FadeAndLoad(int nextLevel)
+    // Text effects
+    IEnumerator FadeScale(TextMeshProUGUI txt, float dur = .35f)
     {
-        GameObject fadeObj = new GameObject("FadePanel");
-        Canvas canvas = fadeObj.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 999;
+        Color c = txt.color;
+        c.a = 0;
+        txt.color = c;
 
-        CanvasGroup cg = fadeObj.AddComponent<CanvasGroup>();
-        fadeObj.AddComponent<GraphicRaycaster>();
+        Vector3 s = Vector3.one * 0.3f;
+        Vector3 m = Vector3.one * 1.3f;
+        Vector3 e = Vector3.one;
 
-        Image img = fadeObj.AddComponent<Image>();
-        img.color = Color.black;
-        cg.alpha = 0f;
+        txt.transform.localScale = s;
 
         float t = 0;
-        float dur = 0.8f;
+        while (t < dur)
+        {
+            t += Time.deltaTime;
+
+            float p = t / dur;
+            txt.color = new Color(c.r, c.g, c.b, p);
+
+            if (p < .5f)
+                txt.transform.localScale = Vector3.Lerp(s, m, p * 2f);
+            else
+                txt.transform.localScale = Vector3.Lerp(m, e, (p - .5f) * 2f);
+
+            yield return null;
+        }
+    }
+
+    IEnumerator TextFadeOut(TextMeshProUGUI txt, float dur = .3f)
+    {
+        Color c = txt.color;
+        float t = 0;
 
         while (t < dur)
         {
             t += Time.deltaTime;
-            cg.alpha = Mathf.Lerp(0, 1, t / dur);
+            float p = t / dur;
+
+            txt.color = new Color(c.r, c.g, c.b, 1 - p);
+
             yield return null;
         }
 
-        levelManager.Load(nextLevel);
+        txt.color = new Color(c.r, c.g, c.b, 0);
     }
 }

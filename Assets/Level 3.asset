@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d2ad9c006c637de409ed543bf2d92678, type: 3}
-  m_Name: Level 2
+  m_Name: Level 3
   m_EditorClassIdentifier: 
   CameraPosition: {x: 0, y: 0, z: 0}
   Cubes:
@@ -24,5 +24,5 @@ MonoBehaviour:
   - {x: 6, y: -3}
   StartPos: {x: 6, y: -4}
   EndPos: {x: 1, y: 0}
-  StartColor: {r: 0.011764692, g: 0.88783973, b: 0.95686275, a: 1}
-  EndColor: {r: 0, g: 1, b: 0.40828085, a: 1}
+  StartColor: {r: 0.95686275, g: 0.011764692, b: 0.68342745, a: 1}
+  EndColor: {r: 1, g: 0.07060623, b: 0, a: 1}
