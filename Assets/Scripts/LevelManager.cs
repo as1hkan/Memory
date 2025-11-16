@@ -4,7 +4,7 @@ using UnityEngine;
 public class LevelManager : MonoBehaviour
 {
     [SerializeField] private SimpleGridMovement player;
-    [SerializeField] private List<Level> levelsData;
+    [SerializeField] public List<Level> levelsData;   // public برای دسترسی فقط به Count
     [SerializeField] private Transform parent;
 
     [Header("Prefabs")]
@@ -16,6 +16,15 @@ public class LevelManager : MonoBehaviour
 
     public void Load(int index)
     {
+        // محافظت: نذاریم index از محدوده خارج بشه
+        if (levelsData == null || levelsData.Count == 0)
+        {
+            Debug.LogError("LevelManager: levelsData is empty!");
+            return;
+        }
+
+        index = Mathf.Clamp(index, 1, levelsData.Count);
+
         Debug.Log("LevelManager Loading = " + index);
 
         if (currentLevelGO != null)
@@ -23,8 +32,6 @@ public class LevelManager : MonoBehaviour
 
         currentLevelGO = new GameObject("LEVEL_" + index);
         currentLevelGO.transform.SetParent(parent);
-        currentLevelGO.transform.localPosition = new Vector3(0, -5f, 0);
-
 
         Level lvl = levelsData[index - 1];
 
@@ -37,9 +44,7 @@ public class LevelManager : MonoBehaviour
             new Vector3(lvl.StartPos.x, 0, lvl.StartPos.y),
             Quaternion.identity,
             currentLevelGO.transform
-
         );
-
         blocksToFall.Add(startObj);
 
         // PATH
@@ -62,13 +67,12 @@ public class LevelManager : MonoBehaviour
             Quaternion.identity,
             currentLevelGO.transform
         );
-
         blocksToFall.Add(endObj);
 
         // COLOR GRADIENT
         for (int i = 0; i < blocks.Count; i++)
         {
-            float t = (float)i / (blocks.Count - 1);
+            float t = (float)i / Mathf.Max(1, blocks.Count - 1);
             Color color = Color.Lerp(lvl.StartColor, lvl.EndColor, t);
 
             blocks[i].GetComponent<MeshRenderer>().material.color = color;
@@ -76,7 +80,7 @@ public class LevelManager : MonoBehaviour
         }
 
         // PLAYER PLACE
-        player.transform.position = new Vector3(lvl.StartPos.x, 1, lvl.StartPos.y);
+        player.transform.position = new Vector3(lvl.StartPos.x, 1f, lvl.StartPos.y);
         player.canMove = false;
         player.isWinning = false;
 

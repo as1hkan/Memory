@@ -1,19 +1,24 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class MusicManager : MonoBehaviour
 {
     public static MusicManager instance;
 
+    public TextButtonColor musicButtonText;
+    public TextButtonColor sfxButtonText;
+
     [Header("Music Settings")]
     public AudioSource audioSource;
-    public List<AudioClip> musicList;   // ⬅ اینجا چندتا آهنگ اضافه می‌کنی
+    public List<AudioClip> musicList;
     private int lastIndex = -1;
+    public bool musicMuted = false;
 
     [Header("SFX Settings")]
     public GameObject audioPrefab;
-    private bool SFXMuted = false;
+    public bool SFXMuted = false;
 
     private void Awake()
     {
@@ -21,6 +26,8 @@ public class MusicManager : MonoBehaviour
         {
             instance = this;
             DontDestroyOnLoad(this.gameObject);
+
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
         else
         {
@@ -31,17 +38,42 @@ public class MusicManager : MonoBehaviour
 
     private void Start()
     {
-        if (musicList.Count > 0)
-            PlayNextMusic();   // شروع پخش رندوم
+        // Load saved states
+        musicMuted = PlayerPrefs.GetInt("MusicMuted", 0) == 1;
+        SFXMuted = PlayerPrefs.GetInt("SfxMuted", 0) == 1;
+
+        if (!musicMuted && musicList.Count > 0)
+            PlayNextMusic();
+
+        FindButtons();
+        UpdateButtonColors();
     }
 
+    // هر بار وارد Scene جدید شدیم دکمه‌های جدید را پیدا کن
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        FindButtons();
+        UpdateButtonColors();
+    }
+
+    private void FindButtons()
+    {
+        TextButtonColor[] found = FindObjectsOfType<TextButtonColor>(true);
+
+        // اولی music است — دومی SFX
+        if (found.Length >= 1) musicButtonText = found[0];
+        if (found.Length >= 2) sfxButtonText = found[1];
+    }
+
+    // -------------------------
+    // MUSIC
+    // -------------------------
     void PlayNextMusic()
     {
+        if (musicMuted) return;
         if (musicList.Count == 0) return;
 
         int newIndex;
-
-        // جلوگیری از تکراری پخش شدن
         do
         {
             newIndex = Random.Range(0, musicList.Count);
@@ -49,6 +81,7 @@ public class MusicManager : MonoBehaviour
         while (newIndex == lastIndex && musicList.Count > 1);
 
         lastIndex = newIndex;
+
         audioSource.clip = musicList[newIndex];
         audioSource.Play();
 
@@ -57,30 +90,56 @@ public class MusicManager : MonoBehaviour
 
     IEnumerator WaitForMusicEnd()
     {
-        while (audioSource.isPlaying)
+        while (audioSource.isPlaying && !musicMuted)
             yield return null;
 
-        PlayNextMusic();
+        if (!musicMuted)
+            PlayNextMusic();
     }
 
+    public void OnMuteMusicButtonClick()
+    {
+        musicMuted = !musicMuted;
 
-    // ------- SFX -------
+        PlayerPrefs.SetInt("MusicMuted", musicMuted ? 1 : 0);
+        PlayerPrefs.Save();
+
+        if (musicMuted)
+            audioSource.Stop();
+        else
+            PlayNextMusic();
+
+        UpdateButtonColors();
+    }
+
+    // -------------------------
+    // SFX
+    // -------------------------
     public void Play()
     {
         if (!SFXMuted)
             Instantiate(audioPrefab);
     }
 
-    public void OnMuteMusicButtonClick()
-    {
-        if (audioSource.isPlaying)
-            audioSource.Stop();
-        else
-            PlayNextMusic();
-    }
-
     public void OnMuteSFXButtonClick()
     {
         SFXMuted = !SFXMuted;
+
+        PlayerPrefs.SetInt("SfxMuted", SFXMuted ? 1 : 0);
+        PlayerPrefs.Save();
+
+        UpdateButtonColors();
+    }
+
+    // -------------------------
+    // UI COLOR UPDATE
+    // -------------------------
+    void UpdateButtonColors()
+    {
+        if (musicButtonText != null)
+            musicButtonText.SetState(!musicMuted); // روشن یعنی فعال
+
+        if (sfxButtonText != null)
+            sfxButtonText.SetState(!SFXMuted);     // روشن یعنی فعال
     }
 }

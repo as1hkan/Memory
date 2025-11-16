@@ -1,7 +1,8 @@
-﻿using System.Collections;
+﻿using UnityEngine;
+using System.Collections;
 using System.Linq;
 using TMPro;
-using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -28,25 +29,20 @@ public class GameManager : MonoBehaviour
     private bool gameEnded = false;
     private bool winRoutineStarted = false;
 
-    void Awake()
+    private void Awake()
     {
-        if (instance != null && instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
         instance = this;
     }
 
-    void Start()
+    private void Start()
     {
         int lvl = PlayerPrefs.GetInt("SelectedLevel", 1);
+
         levelManager.Load(lvl);
         StartCoroutine(StartTimer());
     }
 
-    void Update()
+    private void Update()
     {
         if (!gameEnded && player.canMove)
         {
@@ -55,12 +51,13 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    // ================= COUNTDOWN =================
     IEnumerator StartTimer()
     {
         countdownText.text = "";
+
         float countdown = 3f;
 
-        // 3 → 2 → 1
         while (countdown > 0)
         {
             countdownText.text = Mathf.CeilToInt(countdown).ToString();
@@ -69,27 +66,25 @@ public class GameManager : MonoBehaviour
             countdown--;
         }
 
-        // مخفی کردن مسیر
         foreach (var b in blocks)
         {
             var r = b.GetComponent<MeshRenderer>();
             if (r != null) r.enabled = false;
         }
 
-        // 🟩 GO!
         countdownText.text = "برو!";
-        StartCoroutine(FadeScale(countdownText));      // ظاهر شدن
+        StartCoroutine(FadeScale(countdownText));
 
         yield return new WaitForSeconds(0.6f);
 
-        StartCoroutine(TextFadeOut(countdownText));    // محو شدن
-
+        StartCoroutine(TextFadeOut(countdownText));
         yield return new WaitForSeconds(0.3f);
 
         countdownText.text = "";
         player.canMove = true;
     }
 
+    // ================= BLOCK REVEAL =================
     void RevealBlockUnderPlayer(Vector3 pos)
     {
         if (Physics.Raycast(pos + Vector3.up * 0.5f, Vector3.down,
@@ -100,6 +95,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    // ================= CHECK WIN =================
     void CheckWin(Vector3 pos)
     {
         if (Physics.Raycast(pos + Vector3.up * 0.2f, Vector3.down,
@@ -125,6 +121,7 @@ public class GameManager : MonoBehaviour
         StartCoroutine(HandleWin());
     }
 
+    // ================= HANDLE WIN =================
     IEnumerator HandleWin()
     {
         countdownText.text = "برنده شدی!";
@@ -133,7 +130,7 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(0.6f);
         StartCoroutine(TextFadeOut(countdownText));
 
-        // Block fall (بدون تغییر)
+        // *************** Block Falling ***************
         blocksToFall = blocksToFall
             .OrderBy(b => Vector3.Distance(b.transform.position, StartPoint.position))
             .ToArray();
@@ -164,24 +161,38 @@ public class GameManager : MonoBehaviour
 
         yield return new WaitForSeconds(1.4f);
 
-        // Save next level
-        int current = PlayerPrefs.GetInt("SelectedLevel", 1);
-        int next = current + 1;
-        PlayerPrefs.SetInt("SelectedLevel", next);
-        PlayerPrefs.Save();
+        // *************** Save Progress ***************
+        int selected = PlayerPrefs.GetInt("SelectedLevel", 1);
+        int unlocked = PlayerPrefs.GetInt("UnlockedLevel", 1);
 
-        countdownText.text = "";
+        int next = selected + 1;
+        int totalLevels = levelManager.levelsData.Count;
 
-        // Load next level (بدون Fade)
-        levelManager.Load(next);
+        // فقط اگر مرحله بعدی وجود دارد
+        if (next <= totalLevels)
+        {
+            PlayerPrefs.SetInt("SelectedLevel", next);
 
-        // Reset flags
-        gameEnded = false;
-        winRoutineStarted = false;
+            if (next > unlocked)
+                PlayerPrefs.SetInt("UnlockedLevel", next);
 
-        StartCoroutine(StartTimer());
+            PlayerPrefs.Save();
+
+            // Load next level
+            levelManager.Load(next);
+            gameEnded = false;
+            winRoutineStarted = false;
+
+            StartCoroutine(StartTimer());
+        }
+        else
+        {
+            // 🚨 آخرین مرحله → برو End Scene
+            SceneManager.LoadScene("End Scene");
+        }
     }
 
+    // ================= FALL BLOCK =================
     IEnumerator FallBlock(Transform t, Vector3 s, Vector3 e, float dur)
     {
         float tm = 0;
@@ -203,21 +214,22 @@ public class GameManager : MonoBehaviour
         {
             tm += Time.deltaTime;
             float pr = Mathf.SmoothStep(0, 1, tm / dur);
+
             p.position = new Vector3(
                 ep.position.x,
                 Mathf.Lerp(s.y, e.y, pr),
                 ep.position.z
             );
+
             yield return null;
         }
     }
 
-    // Text effects
+    // ================= TEXT EFFECTS =================
     IEnumerator FadeScale(TextMeshProUGUI txt, float dur = .35f)
     {
         Color c = txt.color;
-        c.a = 0;
-        txt.color = c;
+        txt.color = new Color(c.r, c.g, c.b, 0);
 
         Vector3 s = Vector3.one * 0.3f;
         Vector3 m = Vector3.one * 1.3f;
@@ -253,7 +265,6 @@ public class GameManager : MonoBehaviour
             float p = t / dur;
 
             txt.color = new Color(c.r, c.g, c.b, 1 - p);
-
             yield return null;
         }
 

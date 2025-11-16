@@ -1,77 +1,90 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+using TMPro;
 
 public class MenuManager : MonoBehaviour
 {
     [Header("Level Buttons")]
     [SerializeField] private Button[] levelButtons;
 
+    [Header("Level Text Colors")]
+    [SerializeField] private Color unlockedColor = Color.white;
+    [SerializeField] private Color lockedColor = new Color(0.4f, 0.4f, 0.4f);
+
     void Start()
     {
-        // مقدار اولیه اگر وجود نداشت
+        // اگر هیچ لولی ذخیره نشده، از لول 1 شروع کن
         if (!PlayerPrefs.HasKey("UnlockedLevel"))
-            PlayerPrefs.SetInt("UnlockedLevel", -1);
+            PlayerPrefs.SetInt("UnlockedLevel", 1);
 
-        int lastUnlockedLevel = PlayerPrefs.GetInt("UnlockedLevel", -1);
+        int lastUnlockedLevel = PlayerPrefs.GetInt("UnlockedLevel", 1);
 
         for (int i = 0; i < levelButtons.Length; i++)
         {
-            // فقط مرحله‌های باز و مرحله‌ی بعدی فعال باشند
-            if (i <= lastUnlockedLevel + 1)
-                levelButtons[i].interactable = true;
-            else
-                levelButtons[i].interactable = false;
+            int levelIndex = i + 1;  // Level number (1,2,3,...)
 
-            // LVL 1 از Scene Index = 3 شروع می‌شود
-            int sceneIndex = i + 3;
+            bool isUnlocked = levelIndex <= lastUnlockedLevel;
 
+            // فعال بودن دکمه
+            levelButtons[i].interactable = isUnlocked;
+
+            // رنگ متن دکمه
+            TextMeshProUGUI txt = levelButtons[i].GetComponentInChildren<TextMeshProUGUI>();
+            if (txt != null)
+                txt.color = isUnlocked ? unlockedColor : lockedColor;
+
+            // کلیک
             levelButtons[i].onClick.RemoveAllListeners();
-            int capturedIndex = sceneIndex;
-            levelButtons[i].onClick.AddListener(() => LoadLevel(capturedIndex));
+            int capturedLevel = levelIndex;
+
+            levelButtons[i].onClick.AddListener(() =>
+            {
+                SelectLevel(capturedLevel);
+            });
         }
     }
 
-    // 🎮 دکمه Play → می‌برد به آخرین مرحله‌ی باز شده (نه جلوتر)
+    void SelectLevel(int levelIndex)
+    {
+        PlayerPrefs.SetInt("SelectedLevel", levelIndex);
+        PlayerPrefs.Save();
+        SceneManager.LoadScene("LevelGenerator");
+    }
+
+    // دکمه Play
     public void PlayBtn()
     {
-        int lastUnlockedLevel = PlayerPrefs.GetInt("UnlockedLevel", -1);
-        int nextLevelIndex = lastUnlockedLevel + 3; // دقیقاً خود مرحله‌ی بعدی
+        int lastUnlockedLevel = PlayerPrefs.GetInt("UnlockedLevel", 1);
+        int levelToPlay = Mathf.Clamp(lastUnlockedLevel, 1, levelButtons.Length);
 
-        // اگر هنوز هیچ مرحله‌ای باز نشده → برو به LVL 1
-        if (nextLevelIndex < 3)
-            nextLevelIndex = 3;
+        PlayerPrefs.SetInt("SelectedLevel", levelToPlay);
+        PlayerPrefs.Save();
 
-        SceneManager.LoadScene(nextLevelIndex);
+        SceneManager.LoadScene("LevelGenerator");
     }
 
+    // دکمه Levels
     public void LevelsBtn()
     {
-        SceneManager.LoadScene(2); // لیست مراحل
+        SceneManager.LoadScene("Levels");
     }
 
+    // برگشت به منوی اصلی
     public void MainMenuBtn()
     {
-        SceneManager.LoadScene(0);
+        SceneManager.LoadScene("MenuScene");
     }
 
+    // صفحه درباره من
     public void AboutMe()
     {
-        SceneManager.LoadScene(1);
+        SceneManager.LoadScene("About Me");
     }
 
-    public void Back_Menu()
-    {
-        SceneManager.LoadScene(0);
-    }
-
+    // خروج
     public void ExitBtn()
     {
         Application.Quit();
-    }
-
-    public void LoadLevel(int sceneIndex)
-    {
-        SceneManager.LoadScene(sceneIndex);
     }
 }
