@@ -1302,16 +1302,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
-    - target: {fileID: 2103934453889727448, guid: a6d236e61cb84c543b3d10af7fad6382,
-        type: 3}
-      propertyPath: MaxDistance
-      value: 100
-      objectReference: {fileID: 0}
-    - target: {fileID: 2103934453889727448, guid: a6d236e61cb84c543b3d10af7fad6382,
-        type: 3}
-      propertyPath: MinDistance
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 8041056564271437143, guid: a6d236e61cb84c543b3d10af7fad6382,
         type: 3}
       propertyPath: m_LocalPosition.x

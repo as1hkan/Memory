@@ -1,50 +1,55 @@
 ﻿using UnityEngine;
-using System.Collections;
+using DG.Tweening;
 
 public class CameraMenu : MonoBehaviour
 {
-    [SerializeField] private Vector3[] positions;
-    [SerializeField] private float moveSpeed = 6f;   // سرعت ثابت و نرم
-    [SerializeField] private int status = 0;
+    [Header("Camera Positions")]
+    [SerializeField] private Vector3 mainMenuPos;
+    [SerializeField] private Vector3 settingsPos;
+
+    [Header("Movement Settings")]
+    [SerializeField] private float moveDuration = 0.8f;
+
+    [Header("Intro Drop Settings")]
+    [SerializeField] private float introHeight = 12f;
+    [SerializeField] private float introDuration = 2f;
 
     public TitleChanger title;
 
-    private bool waitingForFade = false;
+    private bool inSettings = false;
 
-    private void LateUpdate()
+    private void Start()
     {
-        Vector3 targetPos = positions[status];
-
-        // حرکت نرم بدون شتاب‌های عجیب
-        transform.position = Vector3.MoveTowards(
-            transform.position,
-            targetPos,
-            moveSpeed * Time.deltaTime
-        );
-
-        // اگر رسیدیم به هدف → فید انجام بده
-        if (waitingForFade && Vector3.Distance(transform.position, targetPos) < 0.01f)
-        {
-            waitingForFade = false;
-            title.DoFadeNow();
-        }
+        DoIntroDrop();
     }
 
-    public void PlusStatus()
+    private void DoIntroDrop()
     {
-        if (status < positions.Length - 1)
-            status++;
+        Vector3 start = mainMenuPos + Vector3.up * introHeight;
 
-        waitingForFade = true;
+        transform.position = start;
+
+        transform.DOMove(mainMenuPos, introDuration)
+                 .SetEase(Ease.OutCubic);
+    }
+
+    public void GoToSettings()
+    {
+        inSettings = true;
         title.SetNextText("تنظیمات");
-    }
+        title.DoFadeNow();
 
-    public void ManfiStatus()
+        transform.DOMove(settingsPos, moveDuration)
+                 .SetEase(Ease.InOutSine);
+  }
+
+    public void GoBack()
     {
-        if (status > 0)
-            status--;
-
-        waitingForFade = true;
+        inSettings = false;
         title.SetNextText("مسیر حافظه");
+        title.DoFadeNow();
+
+        transform.DOMove(mainMenuPos, moveDuration)
+                 .SetEase(Ease.InOutSine);
     }
 }
