@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using DG.Tweening;
+using System.Collections;
 
 public class CameraMenu : MonoBehaviour
 {
@@ -36,20 +37,30 @@ public class CameraMenu : MonoBehaviour
     public void GoToSettings()
     {
         inSettings = true;
-        title.SetNextText("تنظیمات");
-        title.DoFadeNow();
 
+        // حرکت دوربین اجرای فوری
         transform.DOMove(settingsPos, moveDuration)
                  .SetEase(Ease.InOutSine);
-  }
+
+        // 2 ثانیه بعد متن تغییر کند
+        StartCoroutine(ChangeTitleDelayed("تنظیمات", 1.5f));
+    }
 
     public void GoBack()
     {
         inSettings = false;
-        title.SetNextText("مسیر حافظه");
-        title.DoFadeNow();
 
         transform.DOMove(mainMenuPos, moveDuration)
                  .SetEase(Ease.InOutSine);
+
+        StartCoroutine(ChangeTitleDelayed("مسیر حافظه", 1.5f));
+    }
+
+    private IEnumerator ChangeTitleDelayed(string nextTitle, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        title.SetNextText(nextTitle);
+        title.DoFadeNow();
     }
 }
