@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class LevelManager : MonoBehaviour
 {
+    [SerializeField] private Transform camera;
     [SerializeField] private SimpleGridMovement player;
     [SerializeField] public List<Level> levelsData;   // public برای دسترسی فقط به Count
     [SerializeField] private Transform parent;
@@ -83,6 +84,8 @@ public class LevelManager : MonoBehaviour
         player.transform.position = new Vector3(lvl.StartPos.x, 1f, lvl.StartPos.y);
         player.canMove = false;
         player.isWinning = false;
+
+        camera.position = lvl.CameraPosition;
 
         // SEND TO GAMEMANAGER
         GameManager.instance.blocks = blocks.ToArray();

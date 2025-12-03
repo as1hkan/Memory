@@ -49,7 +49,7 @@ public class MenuManager : MonoBehaviour
     {
         PlayerPrefs.SetInt("SelectedLevel", levelIndex);
         PlayerPrefs.Save();
-        SceneManager.LoadScene("LevelGenerator");
+        SceneManager.LoadScene("Game");
     }
 
     // دکمه Play
@@ -61,7 +61,7 @@ public class MenuManager : MonoBehaviour
         PlayerPrefs.SetInt("SelectedLevel", levelToPlay);
         PlayerPrefs.Save();
 
-        SceneManager.LoadScene("LevelGenerator");
+        SceneManager.LoadScene("Game");
     }
 
     // دکمه Levels
@@ -73,7 +73,7 @@ public class MenuManager : MonoBehaviour
     // برگشت به منوی اصلی
     public void MainMenuBtn()
     {
-        SceneManager.LoadScene("MenuScene");
+        SceneManager.LoadScene("Menu");
     }
 
     // صفحه درباره من

@@ -18,5 +18,7 @@ public class TextButtonColor : MonoBehaviour
     {
         if (txt != null)
             txt.color = isOn ? onColor : offColor;
+        else
+            Debug.LogError("text null");
     }
 }

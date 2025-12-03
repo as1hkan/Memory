@@ -12958,7 +12958,7 @@ MonoBehaviour:
   - {x: -8.03, y: 7.42, z: -35.91}
   - {x: -8.03, y: 7.42, z: -35.91}
   - {x: -8.03, y: 7.42, z: -42.87}
-  smoothSpeed: 1.2
+  smoothSpeed: 3
   status: 0
 --- !u!1 &2015030786
 GameObject:
