@@ -5,7 +5,7 @@ public class LevelManager : MonoBehaviour
 {
     [SerializeField] private Transform camera;
     [SerializeField] private SimpleGridMovement player;
-    [SerializeField] public List<Level> levelsData;   // public برای دسترسی فقط به Count
+    [SerializeField] public List<Level> levelsData;   
     [SerializeField] private Transform parent;
 
     [Header("Prefabs")]
@@ -17,7 +17,7 @@ public class LevelManager : MonoBehaviour
 
     public void Load(int index)
     {
-        // محافظت: نذاریم index از محدوده خارج بشه
+      
         if (levelsData == null || levelsData.Count == 0)
         {
             Debug.LogError("LevelManager: levelsData is empty!");
@@ -37,7 +37,7 @@ public class LevelManager : MonoBehaviour
         Level lvl = levelsData[index - 1];
 
         List<GameObject> blocks = new List<GameObject>();
-        // List<GameObject> blocksToFall = new List<GameObject>(); // دیگر نیازی نیست
+     
 
         // START BLOCK
         GameObject startObj = Instantiate(
@@ -46,7 +46,7 @@ public class LevelManager : MonoBehaviour
             Quaternion.identity,
             currentLevelGO.transform
         );
-        // blocksToFall.Add(startObj); // حذف شد
+      
 
         // PATH
         foreach (var pos in lvl.Cubes)
@@ -68,7 +68,7 @@ public class LevelManager : MonoBehaviour
             Quaternion.identity,
             currentLevelGO.transform
         );
-        // blocksToFall.Add(endObj); // حذف شد
+       
 
         // COLOR GRADIENT
         for (int i = 0; i < blocks.Count; i++)
@@ -77,23 +77,19 @@ public class LevelManager : MonoBehaviour
             Color color = Color.Lerp(lvl.StartColor, lvl.EndColor, t);
 
             blocks[i].GetComponent<MeshRenderer>().material.color = color;
-            // blocksToFall.Add(blocks[i]); // حذف شد
+          
         }
 
-        // PLAYER PLACE
+        
         player.transform.position = new Vector3(lvl.StartPos.x, 1f, lvl.StartPos.y);
         player.canMove = false;
         player.isWinning = false;
 
         camera.position = lvl.CameraPosition;
 
-        // SEND TO GAMEMANAGER
         GameManager.instance.blocks = blocks.ToArray();
 
-        // خطوط زیر حذف شدند چون در GameManager دیگر استفاده نمی‌شوند
-        // GameManager.instance.blocksToFall = blocksToFall.ToArray();
-        // GameManager.instance.StartPoint = startObj.transform;
-        // GameManager.instance.EndPoint = endObj.transform;
+        
 
         Debug.Log("Loaded Level " + index);
     }

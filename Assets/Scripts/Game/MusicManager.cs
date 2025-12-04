@@ -1,6 +1,6 @@
-﻿using UnityEngine;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class MusicManager : MonoBehaviour
@@ -49,7 +49,7 @@ public class MusicManager : MonoBehaviour
         UpdateButtonColors();
     }
 
-    // هر بار وارد Scene جدید شدیم دکمه‌های جدید را پیدا کن
+
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         FindButtons();
@@ -60,14 +60,12 @@ public class MusicManager : MonoBehaviour
     {
         TextButtonColor[] found = FindObjectsOfType<TextButtonColor>(true);
 
-        // اولی music است — دومی SFX
+
         if (found.Length >= 1) musicButtonText = found[0];
         if (found.Length >= 2) sfxButtonText = found[1];
     }
 
-    // -------------------------
-    // MUSIC
-    // -------------------------
+
     void PlayNextMusic()
     {
         if (musicMuted) return;
@@ -112,9 +110,7 @@ public class MusicManager : MonoBehaviour
         UpdateButtonColors();
     }
 
-    // -------------------------
-    // SFX
-    // -------------------------
+
     public void Play()
     {
         if (!SFXMuted)
@@ -131,15 +127,11 @@ public class MusicManager : MonoBehaviour
         UpdateButtonColors();
     }
 
-    // -------------------------
-    // UI COLOR UPDATE
-    // -------------------------
     void UpdateButtonColors()
     {
         if (musicButtonText != null)
-            musicButtonText.SetState(!musicMuted); // روشن یعنی فعال
-
+            musicButtonText.SetState(!musicMuted);
         if (sfxButtonText != null)
-            sfxButtonText.SetState(!SFXMuted);     // روشن یعنی فعال
+            sfxButtonText.SetState(!SFXMuted);
     }
 }

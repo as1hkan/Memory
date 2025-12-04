@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2ad9c006c637de409ed543bf2d92678, type: 3}
   m_Name: Level1
   m_EditorClassIdentifier: 
-  CameraPosition: {x: 0, y: 4, z: 0}
+  CameraPosition: {x: 4, y: 4, z: -2}
   Cubes:
   - {x: 2, y: 0}
   - {x: 3, y: 0}

@@ -15,22 +15,20 @@ public class CameraMovement : MonoBehaviour
     {
         if (player == null) return;
 
-        // 🔹 موقعیت پایه = بازیکن + offset (زاویه ثابت)
+      
         Vector3 baseFollowPos = player.position + followOffset;
 
-        // 🔹 اگر positions تعریف شده بود، اون تغییر رو اضافه کن
+       
         Vector3 animOffset = Vector3.zero;
         if (positions.Length > 0)
             animOffset = positions[status];
 
-        // 🔹 موقعیت نهایی
         Vector3 targetPos = baseFollowPos + animOffset;
 
-        // 🔹 حرکت نرم دوربین به هدف
+       
         transform.position = Vector3.Lerp(transform.position, targetPos, smoothSpeed * Time.deltaTime);
 
-        // 🔹 زاویه‌ی ثابت — از rotation فعلی استفاده کن (هیچ LookAt یا تغییر زاویه‌ای انجام نده)
-        // یعنی همون زاویه‌ای که در Inspector تنظیم کردی، مثلاً X=36, Y=-45
+      
     }
 
     public void PlusStatus()

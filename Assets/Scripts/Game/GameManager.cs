@@ -1,7 +1,6 @@
-﻿using UnityEngine;
-using System.Collections;
-using System.Linq;
+﻿using System.Collections;
 using TMPro;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
@@ -11,7 +10,7 @@ public class GameManager : MonoBehaviour
     [Header("Player/Level")]
     public SimpleGridMovement player;
     public LevelManager levelManager;
-    // public CameraMovement cameraMovement; // حذف شد: دیگر به دوربین کاری نداریم
+
 
     [Header("Ray Settings")]
     public float rayDistance = 2f;
@@ -38,8 +37,7 @@ public class GameManager : MonoBehaviour
 
         levelManager.Load(lvl);
 
-        // حذف شد: انیمیشن شروع دوربین
-        // if (cameraMovement != null) cameraMovement.PlayStartAnimation();
+
 
         StartCoroutine(StartTimer());
     }
@@ -53,7 +51,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // ================= COUNTDOWN =================
+
     IEnumerator StartTimer()
     {
         countdownText.text = "";
@@ -87,7 +85,7 @@ public class GameManager : MonoBehaviour
         player.canMove = true;
     }
 
-    // ================= BLOCK REVEAL =================
+
     void RevealBlockUnderPlayer(Vector3 pos)
     {
         if (Physics.Raycast(pos + Vector3.up * 0.5f, Vector3.down,
@@ -98,7 +96,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // ================= CHECK WIN =================
+
     void CheckWin(Vector3 pos)
     {
         if (Physics.Raycast(pos + Vector3.up * 0.2f, Vector3.down,
@@ -124,28 +122,27 @@ public class GameManager : MonoBehaviour
         StartCoroutine(HandleWin());
     }
 
-    // ================= HANDLE WIN =================
+
     IEnumerator HandleWin()
     {
-        // حذف شد: زوم دوربین
-        // if (cameraMovement != null) cameraMovement.ZoomIn();
+
 
         countdownText.text = "برنده شدی!";
         StartCoroutine(FadeScale(countdownText));
 
         yield return new WaitForSeconds(1.5f);
-        
+
         StartCoroutine(TextFadeOut(countdownText));
         yield return new WaitForSeconds(0.5f);
 
-        // *************** Save Progress & Next Level ***************
+
         int selected = PlayerPrefs.GetInt("SelectedLevel", 1);
         int unlocked = PlayerPrefs.GetInt("UnlockedLevel", 1);
 
         int next = selected + 1;
         int totalLevels = levelManager.levelsData.Count;
 
-        // فقط اگر مرحله بعدی وجود دارد
+
         if (next <= totalLevels)
         {
             PlayerPrefs.SetInt("SelectedLevel", next);
@@ -155,11 +152,9 @@ public class GameManager : MonoBehaviour
 
             PlayerPrefs.Save();
 
-            // Load next level
             levelManager.Load(next);
 
-            // حذف شد: انیمیشن دوربین برای مرحله جدید
-            // if (cameraMovement != null) cameraMovement.PlayStartAnimation();
+
 
             gameEnded = false;
             winRoutineStarted = false;
@@ -168,12 +163,12 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            // 🚨 آخرین مرحله → برو End Scene
-            SceneManager.LoadScene("End Scene");
+
+            SceneManager.LoadScene("End");
         }
     }
 
-    // ================= TEXT EFFECTS =================
+
     IEnumerator FadeScale(TextMeshProUGUI txt, float dur = .35f)
     {
         Color c = txt.color;
